@@ -37,7 +37,7 @@ export default function LoginPage() {
       if (error) throw error
       router.push('/dashboard')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Une erreur est survenue')
+      setError(error instanceof Error ? error.message : 'Attention, une erreur est survenue')
     } finally {
       setIsLoading(false)
     }
