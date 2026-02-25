@@ -65,7 +65,7 @@ export default function OnboardingPage() {
               <CardHeader>
                 <CardTitle className="text-2xl">Bienvenue !</CardTitle>
                 <CardDescription>
-                  Comment souhaitez-vous commencer ?
+                  Commentt souhaitez-vous commencer ?
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
