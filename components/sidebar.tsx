@@ -29,7 +29,7 @@ export function Sidebar({
     .toUpperCase()
 
   return (
-    <aside className="hidden md:flex md:w-[280px] md:shrink-0 md:flex-col md:border-r md:border-border md:bg-sidebar">
+    <aside className="hidden md:sticky md:top-0 md:flex md:h-svh md:w-[280px] md:shrink-0 md:flex-col md:border-r md:border-border md:bg-sidebar">
       <div className="flex items-center gap-2 px-6 py-6">
         <div className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-primary text-primary-foreground">
           <Wallet className="h-5 w-5" strokeWidth={1.75} />
