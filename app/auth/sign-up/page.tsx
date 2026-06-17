@@ -44,20 +44,21 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/dashboard`,
-          data: {
-            display_name: displayName,
-          },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: { display_name: displayName },
         },
       })
       if (error) throw error
-      router.push('/auth/sign-up-success')
+      // If email confirmation is disabled, Supabase returns a session immediately
+      if (data.session) {
+        router.push('/onboarding')
+      } else {
+        router.push('/auth/sign-up-success')
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'Une erreur est survenue')
     } finally {
