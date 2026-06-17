@@ -27,6 +27,30 @@ export async function createHousehold(
   }
 }
 
+export async function createInvitation(
+  householdId: string
+): Promise<{ error?: string; code?: string }> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: userErr,
+    } = await supabase.auth.getUser()
+
+    if (userErr) return { error: userErr.message }
+    if (!user) return { error: 'Non authentifie' }
+
+    const { data, error } = await supabase.rpc('create_invitation', {
+      p_household_id: householdId,
+    })
+    if (error) return { error: error.message }
+
+    return { code: data as string }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Erreur inconnue' }
+  }
+}
+
 export async function joinHouseholdByCode(
   code: string
 ): Promise<{ error?: string; householdId?: string; householdName?: string }> {

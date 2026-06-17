@@ -29,6 +29,17 @@ export type Transaction = {
   amount: number
   category_id: string
   subcategory_id: string | null
+  responsible_id: string
   note: string | null
   created_at: string
+}
+
+export type Profile = {
+  id: string
+  display_name: string | null
+}
+
+export type HouseholdMember = {
+  user_id: string
+  profiles: Profile | null
 }

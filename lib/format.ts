@@ -17,14 +17,6 @@ export function getMonthRange(year: number, month: number) {
   return { start, end }
 }
 
-export function formatAriary(amount: number) {
-  const n = Number.isFinite(amount) ? amount : 0
-  // MGA sans décimales, avec séparateurs
-  return new Intl.NumberFormat('fr-FR', {
-    maximumFractionDigits: 0,
-  }).format(n) + ' Ar'
-}
-
 function toISODate(d: Date) {
   const yyyy = d.getFullYear()
   const mm = String(d.getMonth() + 1).padStart(2, '0')

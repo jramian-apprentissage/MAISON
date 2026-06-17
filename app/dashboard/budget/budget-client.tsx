@@ -3,20 +3,23 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AppShell } from '@/components/app-shell'
 import { MonthSelector } from '@/components/month-selector'
-import { getCurrentYearMonth, getMonthRange, formatAriary } from '@/lib/format'
+import { getCurrentYearMonth, getMonthRange } from '@/lib/format'
+import { formatCurrency } from '@/lib/currency'
 import { createClient } from '@/lib/supabase/client'
 import { createOrUpdateBudget, copyPreviousMonthBudget } from '@/lib/actions/budget'
 import type { Category } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Save, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface BudgetClientProps {
   householdId: string
   householdName: string
+  userName: string
+  currency: string
   categories: Category[]
 }
 
@@ -29,8 +32,11 @@ interface BudgetLineState {
 export function BudgetClient({
   householdId,
   householdName,
+  userName,
+  currency,
   categories,
 }: BudgetClientProps) {
+  const format = (amount: number) => formatCurrency(amount, currency)
   const { year: initialYear, month: initialMonth } = getCurrentYearMonth()
   const [year, setYear] = useState(initialYear)
   const [month, setMonth] = useState(initialMonth)
@@ -132,15 +138,15 @@ export function BudgetClient({
   const totalSpent = lines.reduce((s, l) => s + l.spent, 0)
 
   return (
-    <AppShell householdName={householdName}>
-      <div className="flex flex-col gap-4 px-4 py-4 md:px-6">
+    <AppShell householdName={householdName} userName={userName} currency={currency}>
+      <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">Budget mensuel</h1>
+          <h1 className="text-2xl font-bold tracking-tight md:text-[36px]">Budget mensuel</h1>
           <MonthSelector year={year} month={month} onChange={(y, m) => { setYear(y); setMonth(m) }} />
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button
             size="sm"
             variant="outline"
@@ -163,23 +169,27 @@ export function BudgetClient({
         </div>
 
         {/* Summary */}
-        <div className="flex items-center gap-4 rounded-lg border bg-card p-3">
-          <div className="flex-1">
-            <div className="text-xs text-muted-foreground">Budget total</div>
-            <div className="text-sm font-semibold">{formatAriary(totalPlanned)}</div>
-          </div>
-          <div className="h-8 w-px bg-border" />
-          <div className="flex-1">
-            <div className="text-xs text-muted-foreground">Depense</div>
-            <div className="text-sm font-semibold">{formatAriary(totalSpent)}</div>
-          </div>
-          <div className="h-8 w-px bg-border" />
-          <div className="flex-1">
-            <div className="text-xs text-muted-foreground">Restant</div>
-            <div className={`text-sm font-semibold ${totalPlanned - totalSpent >= 0 ? 'text-success' : 'text-destructive'}`}>
-              {formatAriary(totalPlanned - totalSpent)}
-            </div>
-          </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardContent>
+              <div className="text-sm text-muted-foreground">Budget total</div>
+              <div className="text-2xl font-semibold tracking-tight">{format(totalPlanned)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <div className="text-sm text-muted-foreground">Depense</div>
+              <div className="text-2xl font-semibold tracking-tight">{format(totalSpent)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <div className="text-sm text-muted-foreground">Restant</div>
+              <div className={`text-2xl font-semibold tracking-tight ${totalPlanned - totalSpent >= 0 ? 'text-success' : 'text-destructive'}`}>
+                {format(totalPlanned - totalSpent)}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {isLoading ? (
@@ -187,7 +197,7 @@ export function BudgetClient({
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {lines.map((line) => {
               const cat = categories.find((c) => c.id === line.category_id)
               if (!cat) return null
@@ -195,10 +205,16 @@ export function BudgetClient({
                 ? Math.min((line.spent / line.planned_amount) * 100, 100)
                 : 0
               const isOver = line.spent > line.planned_amount && line.planned_amount > 0
+              const isNear = !isOver && percent >= 80
+              const indicatorClass = isOver
+                ? 'bg-destructive'
+                : isNear
+                  ? 'bg-warning'
+                  : 'bg-primary'
 
               return (
-                <Card key={line.category_id}>
-                  <CardContent className="flex flex-col gap-3 p-4">
+                <Card key={line.category_id} className="transition-transform duration-[250ms] ease-out hover:-translate-y-0.5">
+                  <CardContent className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div
@@ -216,20 +232,20 @@ export function BudgetClient({
                           onChange={(e) =>
                             updateLine(line.category_id, parseInt(e.target.value, 10) || 0)
                           }
-                          placeholder="0 Ar"
+                          placeholder="0"
                           className="h-8 text-right text-sm"
                         />
                       </div>
                     </div>
                     {line.planned_amount > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <Progress value={percent} className="h-1.5" />
+                      <div className="flex flex-col gap-1.5">
+                        <Progress value={percent} className="h-1.5" indicatorClassName={indicatorClass} />
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{formatAriary(line.spent)} depense</span>
-                          <span className={isOver ? 'text-destructive font-medium' : ''}>
+                          <span>{format(line.spent)} depense</span>
+                          <span className={isOver ? 'font-medium text-destructive' : isNear ? 'font-medium text-warning' : ''}>
                             {isOver
-                              ? `Depasse de ${formatAriary(line.spent - line.planned_amount)}`
-                              : `${formatAriary(line.planned_amount - line.spent)} restant`}
+                              ? `Depasse de ${format(line.spent - line.planned_amount)}`
+                              : `${format(line.planned_amount - line.spent)} restant`}
                           </span>
                         </div>
                       </div>

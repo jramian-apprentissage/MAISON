@@ -1,13 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { DashboardClient } from './dashboard-client'
+import { TransactionsClient } from './transactions-client'
 
-export default async function DashboardPage() {
+export default async function TransactionsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  // Get household
   const { data: membership } = await supabase
     .from('memberships')
     .select('household_id, role, households(id, name, currency)')
@@ -20,27 +19,38 @@ export default async function DashboardPage() {
   const householdId = membership.household_id
   const household = membership.households as unknown as { id: string; name: string; currency: string }
 
-  // Fetch categories
   const { data: categories } = await supabase
     .from('categories')
     .select('*, subcategories(*)')
     .eq('household_id', householdId)
+    .eq('is_archived', false)
     .order('name')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('display_name')
-    .eq('id', user.id)
-    .single()
+  const { data: memberships } = await supabase
+    .from('memberships')
+    .select('user_id')
+    .eq('household_id', householdId)
+
+  const memberIds = (memberships || []).map((m) => m.user_id)
+
+  const { data: profiles } = memberIds.length
+    ? await supabase.from('profiles').select('id, display_name').in('id', memberIds)
+    : { data: [] }
+
+  const profileById = new Map((profiles || []).map((p) => [p.id, p]))
+  const members = memberIds.map((id) => ({
+    user_id: id,
+    profiles: profileById.get(id) ?? null,
+  }))
 
   return (
-    <DashboardClient
+    <TransactionsClient
       householdId={householdId}
       householdName={household.name}
-      userName={profile?.display_name || 'Utilisateur'}
+      userName={profileById.get(user.id)?.display_name || 'Utilisateur'}
       currency={household.currency}
       categories={categories || []}
-      userRole={membership.role}
+      members={members}
     />
   )
 }

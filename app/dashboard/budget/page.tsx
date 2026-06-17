@@ -9,7 +9,7 @@ export default async function BudgetPage() {
 
   const { data: membership } = await supabase
     .from('memberships')
-    .select('household_id, role, households(id, name)')
+    .select('household_id, role, households(id, name, currency)')
     .eq('user_id', user.id)
     .limit(1)
     .single()
@@ -17,7 +17,7 @@ export default async function BudgetPage() {
   if (!membership) redirect('/onboarding')
 
   const householdId = membership.household_id
-  const household = membership.households as { id: string; name: string }
+  const household = membership.households as unknown as { id: string; name: string; currency: string }
 
   const { data: categories } = await supabase
     .from('categories')
@@ -27,10 +27,18 @@ export default async function BudgetPage() {
     .eq('is_archived', false)
     .order('name')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('id', user.id)
+    .single()
+
   return (
     <BudgetClient
       householdId={householdId}
       householdName={household.name}
+      userName={profile?.display_name || 'Utilisateur'}
+      currency={household.currency}
       categories={categories || []}
     />
   )
