@@ -24,17 +24,24 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Force la synchro/refresh session (très important)
-  await supabase.auth.getUser()
+  // getSession() reads from the JWT cookie — no external network call, no timeout risk
+  const { data: { session } } = await supabase.auth.getSession()
+
+  const { pathname } = request.nextUrl
+  const isAuthRoute = pathname.startsWith('/auth')
+
+  if (!session && !isAuthRoute) {
+    return NextResponse.redirect(new URL('/auth/login', request.url))
+  }
+
+  if (session && isAuthRoute && !pathname.startsWith('/auth/reset-password')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
   return response
 }
 
 export const config = {
-  matcher: [
-    /*
-      Applique le middleware partout sauf assets statiques
-    */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  // Only run on routes that need auth protection — skip static assets AND public pages
+  matcher: ['/dashboard/:path*', '/onboarding/:path*', '/auth/:path*'],
 }
