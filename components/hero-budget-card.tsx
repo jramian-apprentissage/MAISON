@@ -19,7 +19,7 @@ export function HeroBudgetCard({
         {hasBudget ? (
           <>
             <p className="text-base text-white/80">Il vous reste</p>
-            <p className="mt-2 text-4xl font-bold tracking-tight md:text-5xl">
+            <p className="glow-primary mt-2 text-4xl font-bold tracking-tight md:text-5xl">
               {format(Math.max(remaining, 0))}
             </p>
             <p className="mt-2 text-base text-white/80">avant votre limite de budget.</p>
@@ -27,7 +27,7 @@ export function HeroBudgetCard({
         ) : (
           <>
             <p className="text-base text-white/80">Vous n&apos;avez pas encore defini de budget</p>
-            <p className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
+            <p className="glow-primary mt-2 text-3xl font-bold tracking-tight md:text-4xl">
               {format(spent)} depenses ce mois-ci
             </p>
             <Link href="/dashboard/budget" className="mt-3 inline-block text-sm font-medium underline underline-offset-4">

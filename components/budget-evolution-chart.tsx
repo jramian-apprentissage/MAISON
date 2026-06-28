@@ -38,7 +38,7 @@ export function BudgetEvolutionChart({
                 wrapperStyle={{ fontSize: 12, color: '#8896B3' }}
               />
               <Bar dataKey="budget" fill="#4169E1" radius={[6, 6, 0, 0]} maxBarSize={28} />
-              <Bar dataKey="expenses" fill="#D4AF37" radius={[6, 6, 0, 0]} maxBarSize={28} />
+              <Bar dataKey="expenses" fill="#B8960C" radius={[6, 6, 0, 0]} maxBarSize={28} />
             </BarChart>
           </ResponsiveContainer>
         </div>
